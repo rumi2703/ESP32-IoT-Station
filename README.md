@@ -1,111 +1,182 @@
-# IoT-System mit ESP32 und ESP-NOW
-## Temperatur- und Luftdruckmessung mit Webvisualisierung und Sleep Mode
+# IoT-System mit ESP32 – ESP-NOW, Sensorik, Webvisualisierung & Telegram Bot
 
-VerfasserInnen: **Marco Duong, Rumeysa Erkan**
+## Temperatur- und Luftdruckmessung mit drahtloser Datenübertragung und Echtzeit-Visualisierung
 
+VerfasserInnen: **Marco Duong, Rumeysa Erkan**  
 Datum: **13.05.2026**
 
-## 1.  Einführung
+---
 
-Im Rahmen dieses Projekts wurde ein IoT-System auf Basis von zwei ESP32-Mikrocontrollern entwickelt. Ziel ist die Erfassung, Übertragung und Visualisierung von Umweltdaten wie Temperatur und Luftdruck.
+## 1. Einführung
 
-Das Projekt zeigt den praktischen Einsatz von Sensorik, drahtloser Kommunikation (ESP-NOW) sowie Webtechnologien zur Datenanzeige. Zusätzlich wird ein Energiesparmodus eingesetzt, um den Stromverbrauch des Systems zu reduzieren.
+Im Rahmen dieses Projekts wurde ein IoT-System auf Basis von zwei ESP32 Mikrocontrollern entwickelt. Ziel ist die Erfassung, Übertragung und Visualisierung von Sensordaten in Echtzeit.
 
+Dabei werden Temperatur- und Luftdruckwerte mithilfe eines BMP280 Sensors gemessen und drahtlos über ESP-NOW an einen zweiten ESP32 übertragen. Dieser stellt die Daten über ein Webinterface sowie ein OLED Display dar.
 
-## 2.  Projektbeschreibung
+Zusätzlich werden die Messwerte durch eine RGB-LED, einen Buzzer sowie einen Telegram Bot visualisiert bzw. extern abrufbar gemacht.
 
-Es wurde ein verteiltes IoT-System umgesetzt, das aus zwei ESP32 besteht. Ein Mikrocontroller erfasst Sensordaten mit einem BMP280 Sensor und sendet diese drahtlos an einen zweiten ESP32.
+---
 
-Der zweite ESP32 verarbeitet die Daten, speichert sie und stellt sie über ein Webinterface sowie einen einfachen Graphen dar. Zusätzlich wird ein KY-006 Buzzer zur akustischen Warnung bei Grenzwertüberschreitungen verwendet.
+## 2. Projektbeschreibung
 
+Das System besteht aus zwei ESP32 Mikrocontrollern:
 
-## 3.  Theorie
+Der Sender-ESP32 misst kontinuierlich Temperatur und Luftdruck mit einem BMP280 Sensor. Die Daten werden anschließend über ESP-NOW an den Empfänger übertragen.
 
-Für die Umsetzung des Projekts sind mehrere technische Grundlagen notwendig.
+Der Empfänger-ESP32 verarbeitet die empfangenen Daten und stellt sie über mehrere Ausgabekanäle dar:
 
-Der BMP280 ist ein digitaler Sensor zur Messung von Temperatur und Luftdruck. Die Kommunikation erfolgt über I2C. Der ESP32 dient als Mikrocontroller mit integrierter WLAN-Funktion.
+- Webserver mit Live-Anzeige
+- Webinterface mit Graphen (Chart.js)
+- OLED Display (lokal)
+- Telegram Bot (Fernabfrage)
+- RGB Status-LED
+- Buzzer für Warnsignale
 
-Die Datenübertragung erfolgt über ESP-NOW, ein von Espressif entwickeltes Protokoll für direkte Kommunikation zwischen ESP-Geräten ohne Router.
+Zusätzlich werden historische Durchschnittswerte gespeichert und im Graphen dargestellt.
 
-Zur Darstellung der Daten wird ein Webserver auf dem ESP32 betrieben. Die Visualisierung historischer Daten erfolgt über einen einfachen Graphen, der Messwerte zeitlich darstellt.
+---
 
-Der Sleep Mode wird verwendet, um den ESP32 zwischen Messzyklen in einen stromsparenden Zustand zu versetzen.
+## 3. Projektziel
 
-## 4.   Arbeitsschritt
+Ziel des Projekts ist die Umsetzung eines stabilen IoT-Systems, das Sensordaten zuverlässig erfasst, drahtlos überträgt und auf mehreren Plattformen visualisiert.
 
-Zuerst wurde der BMP280 Sensor mit dem ESP32 verbunden und konfiguriert. Danach wurde die regelmäßige Messung von Temperatur und Luftdruck implementiert.
+Ein besonderer Fokus liegt auf der stabilen ESP-NOW Kommunikation zwischen zwei ESP32 Geräten. Zusätzlich soll ein energieeffizienter Betrieb durch optimierte Übertragung und optionalen Sleep-Modus erreicht werden.
 
-Anschließend wurde die ESP-NOW Kommunikation eingerichtet, um die Sensordaten an den zweiten ESP32 zu übertragen.
+---
 
-Am Empfangsgerät werden die Daten gespeichert und über einen Webserver bereitgestellt. Zusätzlich wurde ein einfacher Graph zur Visualisierung historischer Daten implementiert.
+## 4. Theorie
 
-Der KY-006 Buzzer wurde integriert, um bei Überschreitung definierter Temperaturgrenzen ein akustisches Signal auszugeben.
+### 4.1 ESP32
+Der ESP32 ist ein Mikrocontroller mit integrierter WLAN- und Bluetooth-Funktion. Er eignet sich besonders für IoT-Anwendungen, da er sowohl Sensoren auslesen als auch drahtlos kommunizieren kann.
 
-Zum Abschluss wurde der Sleep Mode implementiert, um den Energieverbrauch zwischen den Messzyklen zu reduzieren.
+---
 
-### Code
+### 4.2 BMP280 Sensor
+Der BMP280 misst Temperatur und Luftdruck über das I2C-Protokoll. Er liefert stabile digitale Messwerte und ist für mobile IoT-Systeme geeignet.
 
-Sehr wichtig ist es den verwendeten Code zu dokumentieren.
+---
 
-```c++
-unsigned long myTime;
+### 4.3 ESP-NOW
+ESP-NOW ist ein proprietäres Protokoll von Espressif zur direkten Kommunikation zwischen ESP-Geräten ohne WLAN-Router.
 
-void setup() {
-  Serial.begin(9600);
-}
-void loop() {
-  Serial.print("Time: ");
-  myTime = millis();
-  Serial.println(myTime);// Gibt die Zeit seit dem Programmstart aus
-  delay(1000);         // Eine Sekunde warten, um keine riesigen Datenmengen zu senden
-}
-```
+Im Projekt wird ESP-NOW verwendet, um Sensordaten vom Sender direkt an den Empfänger zu übertragen. Eine zentrale Herausforderung war die Synchronisation beider Geräte auf demselben WLAN-Kanal.
 
+---
 
-### Bilder und Schaltungen
+### 4.4 Webserver & Visualisierung
+Der ESP32 stellt einen Webserver bereit, über den die Messwerte im Browser angezeigt werden. Zur Visualisierung wird Chart.js verwendet, um Temperatur- und Luftdruckverläufe darzustellen.
 
-<img src="Schaltplan-SYTProjekt.png" alt="Schaltplan" style="zoom:55%;" />
+---
 
+### 4.5 OLED Display
+Das OLED Display zeigt lokale Echtzeitwerte direkt am Gerät an und ermöglicht eine unabhängige Kontrolle ohne Webinterface.
 
-### Komponentenliste
+---
 
-| Komponente | Modell | Funktion im System |
-|------------|--------|-------------------|
-| Mikrocontroller | ESP32 (x2) | Steuerung, Datenverarbeitung und ESP-NOW Kommunikation |
-| Sensor | BMP280 | Messung von Temperatur und Luftdruck |
-| Aktor | KY-006 Buzzer | Akustische Warnsignale bei Grenzwertüberschreitung |
-| Display | OLED SSD1306 (I2C) | Anzeige von Messwerten und Systemstatus |
-| Verbindung | Jumper Kabel | Elektrische Verbindung der Bauteile |
-| Stecksystem | Breadboard | Aufbau der Schaltung ohne Löten |
-| Stromversorgung | USB-Kabel (5V) | Versorgung der ESP32 Module |
-| Software | Arduino IDE | Programmierung der Mikrocontroller |
-| Kommunikation | ESP-NOW | Drahtlose Datenübertragung zwischen den ESP32 |
-| Netzwerk | WLAN | Bereitstellung des Webinterfaces |
+### 4.6 Telegram Bot
+Der Telegram Bot ermöglicht die externe Abfrage der aktuellen Sensordaten über einen einfachen Befehl (/data).
 
-### Ausformulierte Aussage der Tabelle
+---
 
-Die Komponentenliste zeigt alle im Projekt verwendeten Bauteile sowie deren jeweilige Funktion im Gesamtsystem.
+## 5. Arbeitsschritte
 
-Es wurden zwei ESP32 Mikrocontroller eingesetzt, die gemeinsam die Datenerfassung, Verarbeitung und Darstellung übernehmen. Der BMP280 Sensor dient zur Messung von Temperatur und Luftdruck, während der KY-006 Buzzer zur akustischen Warnung bei Überschreitung definierter Grenzwerte verwendet wird.
+### 5.1 Sensorintegration
+Zuerst wurde der BMP280 Sensor am Sender-ESP32 angeschlossen und getestet. Die korrekte Ausgabe von Temperatur- und Luftdruckwerten wurde überprüft.
 
-Das OLED-Display stellt aktuelle Messwerte und Systemzustände direkt am Gerät dar. Die Verbindung der einzelnen Komponenten erfolgt über Jumper-Kabel auf einem Breadboard, wodurch ein flexibler und übersichtlicher Aufbau ermöglicht wird.
+---
 
-Die Stromversorgung der ESP32 Module erfolgt über USB. Die Kommunikation zwischen den beiden Mikrocontrollern wird über ESP-NOW realisiert, während zusätzlich ein Webserver über WLAN zur Visualisierung der Daten bereitgestellt wird.
+### 5.2 ESP-NOW Kommunikation
+Anschließend wurde die ESP-NOW Kommunikation zwischen Sender und Empfänger implementiert.
 
-### Text
+Dabei traten zunächst Probleme bei der Synchronisation auf, insbesondere durch unterschiedliche WLAN-Kanäle. Diese führten zu Sendefehlern.
 
-Die technische Dokumentation beschreibt alle Schritte zur Entwicklung und Umsetzung eines technischen Systems. Sie dient dazu, Aufbau, Funktion und Umsetzung nachvollziehbar darzustellen und eine spätere Wartung oder Erweiterung zu ermöglichen.
+Nach Anpassung des Kanals konnte eine stabile Verbindung hergestellt werden.
 
-## 5.  Zusammenfassung
+---
 
-Im Projekt wurde ein funktionierendes IoT-System mit zwei ESP32 umgesetzt. Die Sensordaten werden zuverlässig erfasst, übertragen und im Webinterface dargestellt.
+### 5.3 Webserver & Graphen
+Der Empfänger-ESP32 wurde mit einem Webserver ausgestattet. Die Daten werden als JSON bereitgestellt und im Browser mithilfe von Chart.js visualisiert.
 
-Als Herausforderungen traten vor allem die Synchronisation der ESP-NOW Kommunikation sowie die Optimierung des Sleep Modes auf. Diese konnten durch Anpassungen in der Programmstruktur gelöst werden.
+---
 
-Insgesamt erfüllt das System die Anforderungen zur Datenerfassung, Übertragung und Visualisierung.
+### 5.4 Erweiterungen
+Zusätzlich wurden folgende Komponenten integriert:
 
-## 6.  Quellen
+- OLED Display zur lokalen Anzeige
+- RGB LED zur Statusanzeige
+- KY-006 Buzzer zur Alarmierung
+- Telegram Bot zur Fernabfrage
 
-[1] Random Nerd Tutorials, „Getting Started with ESP-NOW (ESP32 with Arduino IDE)“. [Online]. Verfügbar unter: https://randomnerdtutorials.com/esp-now-esp32-arduino-ide/ [Zugriff: 13. Mai 2026].
+---
 
-[2] W3Schools, „Chart.js Tutorial“. [Online]. Verfügbar unter: https://www.w3schools.com/js/js_graphics_chartjs.asp [Zugriff: 13. Mai 2026].
+## 6. Testphase
+
+Nach der Implementierung wurden alle Systemkomponenten einzeln getestet.
+
+Zuerst wurde der BMP280 Sensor überprüft, um stabile Messwerte sicherzustellen.
+
+Danach wurde die ESP-NOW Kommunikation getestet. Anfangs kam es zu Übertragungsfehlern aufgrund unterschiedlicher WLAN-Kanäle. Nach Korrektur der Kanalzuweisung funktionierte die Kommunikation stabil.
+
+Im Anschluss wurde das Webinterface getestet, indem überprüft wurde, ob sich die Werte korrekt aktualisieren und im Graph dargestellt werden.
+
+Abschließend wurden OLED Display, RGB LED, Buzzer und Telegram Bot erfolgreich getestet.
+
+---
+
+## 7. Komponentenliste
+
+| Komponente | Funktion |
+|------------|----------|
+| ESP32 (x2) | Steuerung & Kommunikation |
+| BMP280 | Temperatur & Luftdruck |
+| OLED SSD1306 | Lokale Anzeige |
+| RGB LED | Statusanzeige |
+| KY-006 Buzzer | Alarm |
+| WLAN | Webserver |
+| ESP-NOW | Datenübertragung |
+| Telegram Bot | Fernabfrage |
+| Jumper Kabel | Verbindung |
+| Breadboard | Aufbau |
+
+---
+
+## 8. Schaltungsplan
+
+Der Schaltungsplan zeigt den Aufbau des Systems mit Sender- und Empfänger-ESP32 sowie allen angeschlossenen Sensoren und Aktoren.
+
+---
+
+## 9. Code
+
+Der vollständige Code ist im GitHub Repository enthalten:
+
+- Sender: BMP280 + ESP-NOW + Deep Sleep
+- Empfänger: Webserver + OLED + RGB + Buzzer + Telegram Bot + Graph
+
+---
+
+## 10. Zusammenfassung
+
+Im Projekt wurde ein funktionierendes IoT-System entwickelt, das Sensordaten erfasst, drahtlos überträgt und auf mehreren Ebenen visualisiert.
+
+Die größte Herausforderung war die stabile Implementierung der ESP-NOW Kommunikation zwischen zwei ESP32 Geräten. Diese konnte durch die korrekte Kanal-Synchronisation erfolgreich gelöst werden.
+
+Zusätzlich wurde das System durch Webvisualisierung, OLED Anzeige, RGB Status LEDs, akustische Warnung und Telegram Integration erweitert.
+
+Das System erfüllt damit alle Anforderungen eines modernen IoT-Messsystems.
+
+---
+
+## 11. Quellen
+
+[1] Random Nerd Tutorials – ESP32 ESP-NOW Guide  
+https://randomnerdtutorials.com/esp-now-esp32-arduino-ide/
+
+[2] Chart.js Documentation  
+https://www.chartjs.org/
+
+[3] Telegram Bot API  
+https://core.telegram.org/bots/api
+
+[4] Espressif ESP32 Documentation  
+https://docs.espressif.com/
