@@ -1,72 +1,92 @@
+/*
+  Aufgabe:
+  - misst Temperatur + Druck
+  - sendet Daten an Receiver via ESP-NOW
+  - spart Energie durch Deep Sleep
+*/
+
 #include <WiFi.h>
 #include <esp_now.h>
+#include <esp_wifi.h>
 #include <Wire.h>
 #include <Adafruit_BMP280.h>
-#include <esp_wifi.h>
 
+// ---------------- SENSOR ----------------
 Adafruit_BMP280 bmp;
 
-// 👉 MAC vom ESP2 (Empfänger)
-uint8_t receiverMAC[] = {0x00,0x70,0x07,0x7E,0x7E,0x20};
-
+// ---------------- DATA STRUCT ----------------
+// Diese Struktur wird 1:1 an den Receiver gesendet
 typedef struct {
-  float temp;
-  float pressure;
+  float temp;       // Temperatur in °C
+  float pressure;   // Luftdruck in hPa
 } Data;
 
-Data data;
+Data dataToSend;
 
-#define SLEEP_SEC 5
+// ---------------- RECEIVER MAC ----------------
+// Adresse des Empfänger-ESP32 (ESP-NOW Zielgerät)
+uint8_t receiverMAC[] = {0x00, 0x70, 0x07, 0x7E, 0x7E, 0x20};
 
-void onSent(const wifi_tx_info_t *info, esp_now_send_status_t status) {
-  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "SEND OK" : "SEND FAIL");
-}
-
+// ---------------- SETUP ----------------
 void setup() {
+
   Serial.begin(115200);
 
+  // WLAN Modus für ESP-NOW aktivieren
   WiFi.mode(WIFI_STA);
+
+  // Fixe Funkkanalwahl (muss bei beiden Geräten gleich sein)
   esp_wifi_set_channel(11, WIFI_SECOND_CHAN_NONE);
 
+  // ESP-NOW initialisieren
   if (esp_now_init() != ESP_OK) {
-    Serial.println("ESP-NOW Fehler");
+    Serial.println("ESP-NOW INIT FAILED");
     return;
   }
 
-  esp_now_register_send_cb(onSent);
+  // Empfänger hinzufügen
+  esp_now_peer_info_t peerInfo = {};
+  memcpy(peerInfo.peer_addr, receiverMAC, 6);
+  peerInfo.channel = 11;
+  peerInfo.encrypt = false;
 
-  esp_now_peer_info_t peer = {};
-  memcpy(peer.peer_addr, receiverMAC, 6);
-  peer.channel = 11;
-  peer.encrypt = false;
-  peer.ifidx = WIFI_IF_STA;
+  if (esp_now_add_peer(&peerInfo) != ESP_OK) {
+    Serial.println("PEER ADD FAILED");
+    return;
+  }
 
-  esp_now_add_peer(&peer);
-
-  Wire.begin(21, 22);
-
+  // BMP280 starten (I2C Sensor für Temperatur & Druck)
   if (!bmp.begin(0x76)) {
-    Serial.println("BMP280 Fehler");
+    Serial.println("BMP280 NOT FOUND");
     while (1);
   }
 
-  data.temp = bmp.readTemperature();
-  data.pressure = bmp.readPressure() / 100.0;
+  // ---------------- SENSOR READ ----------------
 
+  // Temperatur auslesen (°C)
+  float t = bmp.readTemperature();
+
+  // Druck auslesen (Pa → hPa umrechnen)
+  float p = bmp.readPressure() / 100.0F;
+
+  // Daten in Struktur speichern
+  dataToSend.temp = t;
+  dataToSend.pressure = p;
+
+  // ---------------- SEND DATA ----------------
+  esp_now_send(receiverMAC, (uint8_t*)&dataToSend, sizeof(dataToSend));
+
+  Serial.println("DATA SENT:");
   Serial.print("Temp: ");
-  Serial.println(data.temp);
-
+  Serial.println(t);
   Serial.print("Pressure: ");
-  Serial.println(data.pressure);
+  Serial.println(p);
 
-  Serial.println("Sende Daten...");
-
-  esp_now_send(receiverMAC, (uint8_t*)&data, sizeof(data));
-
-  delay(300);
-
-  esp_sleep_enable_timer_wakeup(SLEEP_SEC * 1000000ULL);
+  // ---------------- DEEP SLEEP ----------------
+  // ESP spart Energie und wacht nach 10 Sekunden wieder auf
+  esp_sleep_enable_timer_wakeup(10 * 1000000);
   esp_deep_sleep_start();
 }
 
+// Loop wird nicht benutzt (Deep Sleep System)
 void loop() {}
