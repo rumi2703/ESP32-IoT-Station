@@ -5,7 +5,6 @@
 **VerfasserInnen:** Marco Duong, Rumeysa Erkan  
 **Datum:** 13.05.2026  
 
----
 
 # 1. Einführung
 
@@ -24,7 +23,6 @@ Der Empfänger verarbeitet die Daten und stellt sie über mehrere Ausgabekanäle
 - Buzzer Alarm
 - Telegram Bot (PIR Meldung)
 
----
 
 # 2. Systemaufbau
 
@@ -44,7 +42,6 @@ Das Projekt besteht aus zwei ESP32 Modulen:
 - verarbeitet PIR + LDR Sensoren
 - sendet Telegram Nachrichten
 
----
 
 # 3. Projektziel
 
@@ -60,14 +57,12 @@ Ein besonderer Fokus liegt auf:
 - sauberer Webvisualisierung
 - modularer Erweiterbarkeit
 
----
 
 # 4. Theorie
 
 ## 4.1 ESP32
 Der ESP32 ist ein Mikrocontroller mit integrierter WLAN- und Bluetooth-Funktion und eignet sich ideal für IoT-Systeme.
 
----
 
 ## 4.2 BMP280 Sensor
 Der BMP280 misst:
@@ -76,7 +71,6 @@ Der BMP280 misst:
 
 Kommunikation erfolgt über I2C.
 
----
 
 ## 4.3 ESP-NOW
 ESP-NOW ist ein direktes Funkprotokoll zwischen ESP-Geräten ohne Router.
@@ -86,7 +80,6 @@ Vorteile:
 - kein WLAN-Netzwerk nötig
 - stabile Peer-to-Peer Kommunikation
 
----
 
 ## 4.4 Webserver & Chart.js
 Der ESP32 stellt einen Webserver bereit.
@@ -95,26 +88,22 @@ Die Daten werden:
 - als JSON geliefert
 - im Browser mit Chart.js visualisiert
 
----
 
 ## 4.5 OLED Display
 Das OLED zeigt:
 - aktuelle Temperatur
 - aktuellen Luftdruck
 
----
 
 ## 4.6 Telegram Bot
 Der Telegram Bot sendet Benachrichtigungen bei Bewegung (PIR Sensor).
 
----
 
-# 🛠 5. Implementierung
+# 5. Implementierung
 
 ## 5.1 Sensorintegration
 BMP280 wurde am Sender-ESP32 integriert und erfolgreich getestet.
 
----
 
 ## 5.2 ESP-NOW Kommunikation
 Die Kommunikation wurde stabil zwischen Sender und Empfänger implementiert.
@@ -125,7 +114,6 @@ Problem:
 Lösung:
 - fixer Kanal (11) auf beiden Geräten
 
----
 
 ## 5.3 Webserver & Graphen
 Der Empfänger stellt zwei Graphen bereit:
@@ -133,7 +121,6 @@ Der Empfänger stellt zwei Graphen bereit:
 - Temperatur Verlauf
 - Luftdruck Verlauf
 
----
 
 ## 5.4 Erweiterungen (EK Features)
 Zusätzlich wurden folgende Features implementiert:
@@ -144,22 +131,20 @@ Zusätzlich wurden folgende Features implementiert:
 - Telegram Bot (PIR Bewegung)
 - LDR Helligkeitssensor
 
----
 
 # 6. Testphase
 
 Alle Komponenten wurden einzeln getestet:
 
-✔ BMP280 liefert stabile Werte  
-✔ ESP-NOW Verbindung stabil  
-✔ Webserver aktualisiert live Daten  
-✔ Graphen zeigen korrekte Historie  
-✔ OLED zeigt aktuelle Werte  
-✔ RGB LED reagiert auf Temperatur  
-✔ Buzzer alarmiert bei Grenzwert  
-✔ Telegram Bot sendet PIR Meldungen  
+- BMP280 liefert stabile Werte
+- ESP-NOW Verbindung stabil
+- Webserver aktualisiert live Daten
+- Graphen zeigen korrekte Historie
+- OLED zeigt aktuelle Werte
+- RGB LED reagiert auf Temperatur
+- Buzzer alarmiert bei Grenzwert
+- Telegram Bot sendet PIR Meldungen  
 
----
 
 # 7. Komponentenliste
 
@@ -176,13 +161,11 @@ Alle Komponenten wurden einzeln getestet:
 | ESP-NOW | Datenübertragung |
 | Telegram Bot | Benachrichtigung |
 
----
 
 # 8. Schaltungsplan
 
 ![Schaltplan](images/Schaltplan.png)
 
----
 
 # 9. Code
 
@@ -201,7 +184,6 @@ Der vollständige Code ist im Repository enthalten:
 - PIR + LDR Sensoren
 - Telegram Bot Integration
 
----
 
 # 10. Zusammenfassung
 
@@ -215,7 +197,6 @@ Das Projekt zeigt ein vollständiges IoT-System mit:
 
 Die größte Herausforderung war die stabile ESP-NOW Kommunikation, welche durch Kanal-Synchronisation gelöst wurde.
 
----
 
 # 📖 11. Quellen
 
