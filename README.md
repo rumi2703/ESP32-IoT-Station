@@ -198,7 +198,7 @@ Das Projekt zeigt ein vollständiges IoT-System mit:
 Die größte Herausforderung war die stabile ESP-NOW Kommunikation, welche durch Kanal-Synchronisation gelöst wurde.
 
 
-# 📖 11. Quellen
+# 11. Quellen
 
 [1] https://randomnerdtutorials.com/esp-now-esp32-arduino-ide/  
 [2] https://www.chartjs.org/  
