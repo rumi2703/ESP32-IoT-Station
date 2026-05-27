@@ -33,8 +33,8 @@ Adafruit_SSD1306 display(128, 64, &Wire, -1);
 #define BLUE_PIN 25
 
 // ---------------- TELEGRAM BOT ----------------
-#define BOT_TOKEN "YOUR_BOT_TOKEN"
-#define CHAT_ID "YOUR_CHAT_ID"
+#define BOT_TOKEN "YOUR_BOT_TOKEN" // eigenen Token einsetzen
+#define CHAT_ID "YOUR_CHAT_ID" // eigene Chat-ID
 
 // Telegram Verbindung
 WiFiClientSecure client;
