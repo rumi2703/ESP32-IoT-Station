@@ -127,7 +127,7 @@ Abschließend wurden OLED Display, RGB LED, Buzzer und Telegram Bot erfolgreich 
 ## 8. Schaltungsplan
 
 Der Schaltungsplan zeigt den Aufbau des Systems mit Sender- und Empfänger-ESP32 sowie allen angeschlossenen Sensoren und Aktoren.
-
+![Screenshot](images/Schaltplan.png)
 
 ## 9. Code
 
