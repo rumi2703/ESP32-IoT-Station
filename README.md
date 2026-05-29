@@ -5,7 +5,6 @@
 **VerfasserInnen:** Marco Duong, Rumeysa Erkan  
 **Datum:** 13.05.2026  
 
----
 
 # 1. Einführung
 
@@ -24,7 +23,6 @@ Der Empfänger verarbeitet diese Daten und stellt sie über mehrere Ausgabekanä
 - Buzzer Alarm
 - Telegram Bot (/status + PIR Meldungen)
 
----
 
 # 2. Systemaufbau
 
@@ -43,7 +41,6 @@ Das System besteht aus zwei ESP32 Mikrocontrollern:
 - PIR und LDR Sensorintegration
 - Telegram Benachrichtigungen
 
----
 
 # 3. Projektziel
 
@@ -54,74 +51,59 @@ Ziel ist die Entwicklung eines stabilen IoT-Systems, das:
 - mehrere Visualisierungen ermöglicht
 - Echtzeitüberwachung bietet
 
----
 
 # 4. Theorie
 
 ## 4.1 ESP32
 Der ESP32 ist ein Mikrocontroller mit WLAN- und Bluetooth-Funktion und wird häufig in IoT-Systemen eingesetzt [4].
 
----
 
 ## 4.2 BMP280 Sensor
 Der BMP280 misst Temperatur und Luftdruck und kommuniziert über I2C [8].
 
----
+
 
 ## 4.3 ESP-NOW
 ESP-NOW ist ein drahtloses Peer-to-Peer Kommunikationsprotokoll ohne Router [3].
 
----
 
 ## 4.4 Webserver & Chart.js
 Der ESP32 stellt Daten als JSON bereit, welche im Browser mit Chart.js visualisiert werden [2].
 
----
 
 ## 4.5 OLED Display
 Das OLED zeigt aktuelle Sensordaten lokal am Gerät an.
 
----
 
 ## 4.6 Telegram Bot
 Der Telegram Bot ermöglicht die Abfrage der Daten über `/status` und sendet PIR Benachrichtigungen.
 
----
 
 ## 4.7 Deep Sleep
 Der Deep Sleep Modus reduziert den Energieverbrauch des Senders erheblich [7].
 
----
 
 # 5. Arbeitsschritte
 
 ## 5.1 Projektplanung
 Zu Beginn wurde das gesamte System geplant. Es wurde entschieden, ein Sender-Empfänger-System mit ESP32 Mikrocontrollern zu entwickeln. Die Sensoren und Aktoren wurden in Mess-, Verarbeitungs- und Ausgabekomponenten eingeteilt.
 
----
 
 ## 5.2 Sensorintegration (BMP280)
 Der BMP280 Sensor wurde am Sender angeschlossen und getestet. Dabei wurde überprüft, ob stabile Temperatur- und Luftdruckwerte korrekt ausgelesen werden.
 
 Nach erfolgreichem Test wurde der Sensor in das Hauptsystem integriert.
 
----
 
 ## 5.3 ESP-NOW Kommunikation
 Die drahtlose Kommunikation zwischen Sender und Empfänger wurde implementiert.
 
-Dabei traten zunächst Probleme durch unterschiedliche WLAN-Kanäle auf. Diese führten zu fehlender Datenübertragung.
-
-Nach Synchronisation beider Geräte auf Kanal 11 konnte das Problem behoben werden.
-
----
 
 ## 5.4 Webserver Implementierung
 Der Empfänger stellt einen Webserver bereit, der die Daten in Echtzeit darstellt.
 
 Die Daten werden als JSON übertragen und im Browser verarbeitet.
 
----
 
 ## 5.5 Datenvisualisierung (Chart.js)
 Es wurden zwei Graphen implementiert:
@@ -131,7 +113,6 @@ Es wurden zwei Graphen implementiert:
 
 Diese werden kontinuierlich aktualisiert und ermöglichen eine Live-Überwachung.
 
----
 
 ## 5.6 Erweiterte Ausgabegeräte
 Nach erfolgreicher Grundfunktion wurden zusätzliche Komponenten integriert:
@@ -140,7 +121,6 @@ Nach erfolgreicher Grundfunktion wurden zusätzliche Komponenten integriert:
 - RGB LED zur Statusanzeige
 - Buzzer zur Alarmierung
 
----
 
 ## 5.7 Erweiterte Sensoren
 Zusätzlich wurden folgende Sensoren integriert:
@@ -148,12 +128,10 @@ Zusätzlich wurden folgende Sensoren integriert:
 - PIR Sensor zur Bewegungserkennung
 - LDR Sensor zur Messung der Helligkeit
 
----
 
 ## 5.8 Telegram Integration
 Der Telegram Bot ermöglicht die Abfrage der aktuellen Werte über `/status`. Zusätzlich werden Bewegungen des PIR Sensors automatisch gemeldet.
 
----
 
 # 6. Testphase
 
@@ -171,7 +149,6 @@ Alle Komponenten wurden einzeln getestet:
 - PIR Sensor erkennt Bewegung
 - LDR Sensor reagiert auf Licht
 
----
 
 # 7. Komponentenliste
 
@@ -188,7 +165,6 @@ Alle Komponenten wurden einzeln getestet:
 | ESP-NOW | Kommunikation |
 | Telegram Bot | Fernüberwachung |
 
----
 
 # 8. Schaltungsplan
 
@@ -202,7 +178,6 @@ Der Empfänger verarbeitet die Daten und steuert OLED Display, RGB LED, Buzzer s
 
 Die Schaltung zeigt klar die Trennung zwischen Messung (Sender) und Verarbeitung (Empfänger), wodurch das System modular aufgebaut ist.
 
----
 
 # 9. Code
 
@@ -221,7 +196,6 @@ Der vollständige Code ist im GitHub Repository enthalten.
 - PIR + LDR Sensoren
 - Telegram Bot Integration
 
----
 
 # 10. Zusammenfassung
 
@@ -231,7 +205,6 @@ Die größte Herausforderung war die stabile ESP-NOW Verbindung, welche durch Ka
 
 Das System wurde erfolgreich durch zusätzliche Sensoren, Webvisualisierung und Telegram Integration erweitert.
 
----
 
 # 11. Quellen
 
