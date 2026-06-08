@@ -1,211 +1,241 @@
 /*
-  Funktionen:
-  - empfängt BMP280 Daten via ESP-NOW
-  - zeigt Daten im Webserver (2 Graphen)
-  - OLED Anzeige
-  - RGB Status LED
-  - PIR Bewegung + Telegram
-  - LDR Helligkeit
-  - Buzzer Alarm
+  Rui Santos & Sara Santos - Random Nerd Tutorials
+  Complete project details at https://RandomNerdTutorials.com/esp-now-esp32-arduino-ide/  
+  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files.
+  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-#include <WiFi.h>
-#include <WiFiManager.h>
 #include <esp_now.h>
-#include <esp_wifi.h>
+#include <WiFi.h>
 #include <WebServer.h>
-#include <Wire.h>
-#include <Adafruit_SSD1306.h>
-#include <WiFiClientSecure.h>
-#include <UniversalTelegramBot.h>
+#include <esp_wifi.h>
 
-// ---------------- OLED DISPLAY ----------------
-Adafruit_SSD1306 display(128, 64, &Wire, -1);
+#define ESPNOW_CHANNEL 5
+const char* ssid = "ZTE_5GCPE_CE5B";
+const char* password = "7L38R7655X";
 
-// ---------------- SENSOR PINS ----------------
-#define PIR_PIN 14      // Bewegungssensor
-#define LDR_PIN 34      // Lichtsensor
-#define BUZZER 27       // Summer
-
-// ---------------- RGB LED PINS ----------------
-#define RED_PIN 32
-#define GREEN_PIN 26
-#define BLUE_PIN 25
-
-// ---------------- TELEGRAM BOT ----------------
-#define BOT_TOKEN "YOUR_BOT_TOKEN" // eigenen Token einsetzen
-#define CHAT_ID "YOUR_CHAT_ID" // eigene Chat-ID
-
-// Telegram Verbindung
-WiFiClientSecure client;
-UniversalTelegramBot bot(BOT_TOKEN, client);
-
-// ---------------- WEB SERVER ----------------
 WebServer server(80);
 
-// ---------------- ESP-NOW DATA STRUCT ----------------
-typedef struct {
-  float temp;       // Temperatur vom Sender
-  float pressure;   // Luftdruck vom Sender
-} Data;
+float aktuelleTemperatur = 0;
+float aktuellerDruck = 0;
 
-Data incoming;
+#define BUZZER_PIN 27
+#define TEMP_GRENZE 32.0
+#define MAX_DATENPUNKTE 40
+#define SPEICHER_INTERVAL 10000
 
-// ---------------- AKTUELLE WERTE ----------------
-float lastTemp = 0;
-float lastPressure = 0;
+// Structure example to receive data
+// Must match the sender structure
+typedef struct struct_message {
+  float temperatur;
+  float druck;
+} struct_message;
 
-// ---------------- HISTORY FÜR GRAPHEN ----------------
-#define MAX_HISTORY 40
+// Create a struct_message called myData
+struct_message myData;
+float temperaturHistorie[MAX_DATENPUNKTE];
+float druckHistorie[MAX_DATENPUNKTE];
+String zeitHistorie[MAX_DATENPUNKTE];
 
-float tempHistory[MAX_HISTORY];
-float pressHistory[MAX_HISTORY];
+int datenIndex = 0;
+int datenAnzahl = 0;
+unsigned long letzteSpeicherung = 0;
 
-int histIndex = 0;
-int histCount = 0;
+// callback function that will be executed when data is received
+void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+  memcpy(&myData, incomingData, sizeof(myData));
 
-// ---------------- PIR STATUS ----------------
-bool motionDetected = false;
-bool lastMotion = false;
+  aktuelleTemperatur = myData.temperatur;
+  aktuellerDruck = myData.druck;
 
-// ---------------- LDR STATUS ----------------
-int lightValue = 0;
-String lightState = "";
+  Serial.print("Temperatur: ");
+  Serial.print(aktuelleTemperatur);
+  Serial.println(" °C");
 
-// ---------------- RGB STATUS ----------------
-bool blinkState = false;
-unsigned long lastBlink = 0;
+  Serial.print("Druck: ");
+  Serial.print(aktuellerDruck);
+  Serial.println(" hPa");
 
-// ---------------- RGB FUNKTION ----------------
-void setRGB(bool r, bool g, bool b) {
-  digitalWrite(RED_PIN, r);
-  digitalWrite(GREEN_PIN, g);
-  digitalWrite(BLUE_PIN, b);
-}
-
-// ---------------- RGB LOGIK ----------------
-// Temperaturabhängige Farbanzeige
-void updateRGB(float t) {
-
-  // ALARM MODE (>30°C) → rotes Blinken
-  if (t > 30.0) {
-    if (millis() - lastBlink > 400) {
-      blinkState = !blinkState;
-      lastBlink = millis();
-    }
-    setRGB(blinkState, 0, 0);
-    return;
+  if (millis() - letzteSpeicherung >= SPEICHER_INTERVAL) {
+    speichereMesswert();
   }
 
-  // WARM (29-30°C)
-  if (t > 29.0) {
-    setRGB(1, 0, 0);
-    return;
-  }
-
-  // NORMAL WARM (27-29°C)
-  if (t > 27.0) {
-    setRGB(1, 1, 0);
-    return;
-  }
-
-  // NORMAL (<27°C)
-  setRGB(0, 0, 1);
-}
-
-// ---------------- BUZZER ALARM ----------------
-bool alarmActive = false;
-unsigned long lastBeep = 0;
-
-void updateBuzzer() {
-
-  if (lastTemp > 30) {
-    alarmActive = true;
+  if (aktuelleTemperatur > TEMP_GRENZE) {
+    tone(BUZZER_PIN, 2000);
   } else {
-    alarmActive = false;
-    ledcWriteTone(BUZZER, 0);
+    noTone(BUZZER_PIN);
   }
 
-  if (alarmActive && millis() - lastBeep > 800) {
-    ledcAttach(BUZZER, 2000, 8);
-    ledcWriteTone(BUZZER, 2000);
+  Serial.println();
+}
+ 
+void handleRoot() {
+  String labels = labelsAlsJSON();
+  String temperaturDaten = datenAlsJSON(temperaturHistorie);
+  String druckDaten = datenAlsJSON(druckHistorie);
 
-    delay(100);
-    ledcWriteTone(BUZZER, 0);
+  String html = "";
+  html += "<!DOCTYPE html><html><head>";
+  html += "<meta charset='UTF-8'>";
+  html += "<meta name='viewport' content='width=device-width, initial-scale=1.0'>";
+  html += "<meta http-equiv='refresh' content='10'>";
+  html += "<title>ESP32 Messdaten</title>";
+  html += "<script src='https://cdn.jsdelivr.net/npm/chart.js'></script>";
+  html += "<style>";
+  html += "body { font-family: Arial; background: #f2f2f2; text-align: center; padding: 20px; }";
+  html += ".box { background: white; padding: 20px; border-radius: 10px; max-width: 900px; margin: auto; box-shadow: 0 0 10px #ccc; }";
+  html += ".werte { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }";
+  html += ".wert { font-size: 24px; margin: 15px; }";
+  html += ".chartbox { margin-top: 30px; }";
+  html += "canvas { max-width: 100%; }";
+  html += "</style>";
+  html += "</head><body>";
+  html += "<div class='box'>";
+  html += "<h1>ESP32 Messdaten</h1>";
 
-    lastBeep = millis();
+  html += "<div class='werte'>";
+  html += "<div class='wert'>Temperatur: ";
+  html += aktuelleTemperatur;
+  html += " &deg;C</div>";
+  html += "<div class='wert'>Druck: ";
+  html += aktuellerDruck;
+  html += " hPa</div>";
+  html += "</div>";
+
+  html += "<div class='chartbox'>";
+  html += "<h2>Temperatur Verlauf</h2>";
+  html += "<canvas id='temperaturChart'></canvas>";
+  html += "</div>";
+
+  html += "<div class='chartbox'>";
+  html += "<h2>Druck Verlauf</h2>";
+  html += "<canvas id='druckChart'></canvas>";
+  html += "</div>";
+
+  html += "</div>";
+
+  html += "<script>";
+  html += "const labels = ";
+  html += labels;
+  html += ";";
+
+  html += "const temperaturDaten = ";
+  html += temperaturDaten;
+  html += ";";
+
+  html += "const druckDaten = ";
+  html += druckDaten;
+  html += ";";
+
+  html += "new Chart(document.getElementById('temperaturChart'), {";
+  html += "type: 'line',";
+  html += "data: { labels: labels, datasets: [{ label: 'Temperatur in °C', data: temperaturDaten, borderColor: 'red', backgroundColor: 'rgba(255,0,0,0.1)', tension: 0.3 }] },";
+  html += "options: { responsive: true, scales: { y: { beginAtZero: false } } }";
+  html += "});";
+
+  html += "new Chart(document.getElementById('druckChart'), {";
+  html += "type: 'line',";
+  html += "data: { labels: labels, datasets: [{ label: 'Druck in hPa', data: druckDaten, borderColor: 'blue', backgroundColor: 'rgba(0,0,255,0.1)', tension: 0.3 }] },";
+  html += "options: { responsive: true, scales: { y: { beginAtZero: false } } }";
+  html += "});";
+
+  html += "</script>";
+
+  html += "</body></html>";
+
+  server.send(200, "text/html", html);
+}
+
+void speichereMesswert() {
+  letzteSpeicherung = millis();
+
+  temperaturHistorie[datenIndex] = aktuelleTemperatur;
+  druckHistorie[datenIndex] = aktuellerDruck;
+  zeitHistorie[datenIndex] = String(millis() / 1000) + "s";
+
+  datenIndex++;
+
+  if (datenIndex >= MAX_DATENPUNKTE) {
+    datenIndex = 0;
+  }
+
+  if (datenAnzahl < MAX_DATENPUNKTE) {
+    datenAnzahl++;
   }
 }
 
-// ---------------- ESP-NOW RECEIVE CALLBACK ----------------
-// wird automatisch aufgerufen wenn Daten ankommen
-void onReceive(const esp_now_recv_info_t *info,
-               const uint8_t *data,
-               int len) {
+String datenAlsJSON(float werte[]) {
+  String json = "[";
 
-  // Daten in Struktur kopieren
-  memcpy(&incoming, data, sizeof(incoming));
+  for (int i = 0; i < datenAnzahl; i++) {
+    int index = (datenIndex - datenAnzahl + i + MAX_DATENPUNKTE) % MAX_DATENPUNKTE;
+    json += String(werte[index], 2);
 
-  // Werte speichern
-  lastTemp = incoming.temp;
-  lastPressure = incoming.pressure;
+    if (i < datenAnzahl - 1) {
+      json += ",";
+    }
+  }
 
-  // Historie für Graphen speichern
-  tempHistory[histIndex] = lastTemp;
-  pressHistory[histIndex] = lastPressure;
-
-  histIndex++;
-  if (histIndex >= MAX_HISTORY) histIndex = 0;
-
-  if (histCount < MAX_HISTORY) histCount++;
-
-  // Systeme aktualisieren
-  updateRGB(lastTemp);
-  updateBuzzer();
+  json += "]";
+  return json;
 }
+String labelsAlsJSON() {
+  String json = "[";
 
-// ---------------- SETUP ----------------
+  for (int i = 0; i < datenAnzahl; i++) {
+    int index = (datenIndex - datenAnzahl + i + MAX_DATENPUNKTE) % MAX_DATENPUNKTE;
+    json += "\"";
+    json += zeitHistorie[index];
+    json += "\"";
+
+    if (i < datenAnzahl - 1) {
+      json += ",";
+    }
+  }
+
+  json += "]";
+  return json;
+}
 void setup() {
-
+  // Initialize Serial Monitor
   Serial.begin(115200);
-
-  // Pins definieren
-  pinMode(PIR_PIN, INPUT);
-  pinMode(LDR_PIN, INPUT);
-
-  pinMode(RED_PIN, OUTPUT);
-  pinMode(GREEN_PIN, OUTPUT);
-  pinMode(BLUE_PIN, OUTPUT);
-
-  pinMode(BUZZER, OUTPUT);
-
-  // OLED starten
-  Wire.begin(21, 22);
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-
-  // WLAN Setup Portal
-  WiFiManager wm;
-  wm.autoConnect("ESP32_Setup", "12345678");
-
-  // ESP-NOW Setup
+  
+  // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
-  esp_wifi_set_channel(11, WIFI_SECOND_CHAN_NONE);
+esp_wifi_set_channel(ESPNOW_CHANNEL, WIFI_SECOND_CHAN_NONE);
 
-  client.setInsecure();
+WiFi.begin(ssid, password);
 
-  esp_now_init();
-  esp_now_register_recv_cb(onReceive);
-
-  // Webserver Routes
-  server.on("/", handleRoot);
-  server.on("/history", handleHistory);
-  server.begin();
-
-  Serial.println("SYSTEM READY");
+Serial.print("Verbinde mit WLAN");
+while (WiFi.status() != WL_CONNECTED) {
+  delay(500);
+  Serial.print(".");
 }
+Serial.print("WLAN-Kanal: ");
+Serial.println(WiFi.channel());
+Serial.println();
+Serial.print("Webserver IP-Adresse: ");
+Serial.println(WiFi.localIP());
 
-// ---------------- LOOP ----------------
+server.on("/", handleRoot);
+server.begin();
+
+Serial.println("Webserver gestartet");
+
+  // Init ESP-NOW
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
+  
+  // Once ESPNow is successfully Init, we will register for recv CB to
+  // get recv packer info
+  esp_now_register_recv_cb(esp_now_recv_cb_t(OnDataRecv));
+
+  pinMode(BUZZER_PIN, OUTPUT);
+  digitalWrite(BUZZER_PIN, LOW);
+}
+ 
 void loop() {
-
   server.handleClient();
 }
