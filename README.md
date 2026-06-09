@@ -147,7 +147,7 @@ Er gibt dann dauerhaft ein Signal aus.
 
 # 8. Schaltungsplan
 
-![Schaltplan](images/schaltplan.png)
+![Schaltplan](images/SchaltplanGK.png)
 
 ### BMP280 Anschluss
 
