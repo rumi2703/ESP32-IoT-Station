@@ -121,15 +121,91 @@ Er gibt dann dauerhaft ein Signal aus.
 
 
 
-# 6. Arbeitsschritte
+### 6. Arbeitsschritt
 
-- Planung des Systems
-- Aufbau der Schaltung
-- Integration BMP280
-- ESP-NOW Kommunikation
-- Webserver Erstellung
-- Graph Implementierung
-- Deep Sleep Integration
+Im folgenden Abschnitt werden die einzelnen Umsetzungsschritte des Projekts detailliert beschrieben, sodass das System nachvollziehbar und reproduzierbar ist.
+
+
+
+### 6.1 Planung und Systemdesign
+
+Zu Beginn wurde das Gesamtsystem geplant. 
+Der Sender übernimmt ausschließlich die Sensordaten-Erfassung, während der Empfänger für Verarbeitung, Speicherung und Darstellung zuständig ist.
+
+
+
+### 6.2 Aufbau der Hardware
+
+Die Komponenten wurden zunächst auf Breadboards aufgebaut und miteinander verbunden.
+
+Dabei wurde besonders darauf geachtet, dass:
+- der BMP280 korrekt angeschlossen ist (SDA und SCL Pins)
+- der KY-006 Buzzer am digitalen GPIO-Pin angeschlossen ist
+- stabile Stromversorgung (3.3V) verwendet wird
+
+Nach dem Aufbau wurde jede Verbindung einzeln getestet.
+
+
+### 6.3 Integration des BMP280 Sensors
+
+Der BMP280 Sensor wurde über den I2C-Bus mit dem ESP32 verbunden.
+
+Anschließend wurde getestet, ob Temperatur- und Luftdruckwerte korrekt ausgelesen werden.
+
+Nach erfolgreichem Test wurden die Messwerte in das Hauptprogramm integriert.
+
+
+
+### 6.4 Implementierung von ESP-NOW
+
+Für die drahtlose Kommunikation wurde ESP-NOW verwendet.
+
+Zunächst wurde die MAC-Adresse des Empfänger-ESP32 ausgelesen und im Sender hinterlegt.
+
+Danach wurde:
+- ein Peer hinzugefügt
+- eine Datenstruktur für Temperatur und Luftdruck erstellt
+- ein Testdatensatz gesendet
+
+Die Übertragung wurde anschließend erfolgreich verifiziert.
+
+
+
+### 6.5 Webserver Implementierung
+
+Der Empfänger stellt einen Webserver zur Verfügung.
+
+Nach Verbindung mit dem WLAN kann der Benutzer über einen Browser auf die aktuelle IP-Adresse zugreifen.
+
+Die Messwerte werden im JSON-Format bereitgestellt und im Browser verarbeitet.
+
+
+
+### 6.6 Datenvisualisierung (Chart.js)
+
+Für die Darstellung der Messwerte wurde Chart.js verwendet.
+
+Die empfangenen Daten werden laufend aktualisiert und in zwei Diagrammen dargestellt:
+- Temperaturverlauf
+- Luftdruckverlauf
+
+Die Daten werden kontinuierlich ergänzt, wodurch ein Verlauf sichtbar wird.
+
+
+
+### 6.7 Deep Sleep Umsetzung
+
+Nach jeder erfolgreichen Messung wird der Sender in den Deep-Sleep-Modus versetzt.
+
+Ablauf:
+1. ESP32 startet
+2. Messung von Temperatur und Luftdruck
+3. Übertragung der Daten via ESP-NOW
+4. Aktivierung von Deep Sleep für 10 Sekunden
+5. Neustart des Zyklus
+
+Durch diesen Mechanismus wird der Energieverbrauch deutlich reduziert.
+
 
 
 
