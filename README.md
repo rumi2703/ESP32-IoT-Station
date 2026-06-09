@@ -1,171 +1,233 @@
 # IoT-System mit ESP32 – ESP-NOW
 
-## Temperatur- und Luftdruckmessung mit drahtloser Datenübertragung 
+## Temperatur- und Luftdruckmessung mit drahtloser Datenübertragung
 
 **VerfasserInnen:** Marco Duong, Rumeysa Erkan  
-**Datum:** 13.05.2026  
+**Datum:** 13.05.2026
 
 
 # 1. Einführung
 
-Im Rahmen dieses Projekts wurde ein IoT-System auf Basis von zwei ESP32 Mikrocontrollern entwickelt.
+Im Rahmen dieses Projekts wurde ein IoT-System auf Basis von zwei ESP32-Mikrocontrollern entwickelt.
 
-Ziel des Systems ist die Erfassung, drahtlose Übertragung und Visualisierung von Sensordaten als Graphen.
+Ziel des Systems ist die Erfassung, drahtlose Übertragung und Visualisierung von Sensordaten.
 
-Dabei werden Temperatur- und Luftdruckwerte mithilfe eines BMP280 Sensors erfasst und über ESP-NOW an einen zweiten ESP32 übertragen.
+Dabei werden Temperatur- und Luftdruckwerte mithilfe eines BMP280 Sensors gemessen und über ESP-NOW an einen zweiten ESP32 übertragen.
 
-Der Empfänger verarbeitet diese Daten und stellt sie über mehrere Ausgabekanäle dar:
+Die empfangenen Daten werden auf einem Webserver dargestellt und zusätzlich durch einen Buzzer überwacht.
 
-- Webserver mit Live-Daten
-- Chart.js Graphen
-- Buzzer Alarm
+Durch den Einsatz des Deep-Sleep-Modus wird der Energieverbrauch des Systems reduziert.
 
-# 2. Systemaufbau
 
-Das System besteht aus zwei ESP32 Mikrocontrollern:
 
-## Sender (Sensor Node)
-- BMP280 Sensor zur Messung von Temperatur und Luftdruck
-- ESP-NOW Datenübertragung
-- Deep Sleep zur Energieeinsparung
+# 2. Projektbeschreibung
 
-## Empfänger (Control Node)
-- Empfang der Sensordaten
-- Verarbeitung und Speicherung
-- Webserver zur Darstellung
-- Steuerung von Buzzer
+Das System besteht aus einem Sender und einem Empfänger.
+
+Der Sender misst Temperatur und Luftdruck und überträgt diese Daten über ESP-NOW.
+
+Anschließend geht der Sender für 10 Sekunden in den Deep-Sleep-Modus.
+
+Der Empfänger verarbeitet die Daten, stellt sie im Webserver dar und steuert den Buzzer.
+
+
 
 # 3. Projektziel
 
-Ziel ist die Entwicklung eines stabilen IoT-Systems, das:
+Ziel war die Entwicklung eines funktionierenden IoT-Systems mit:
 
-- Sensordaten zuverlässig erfasst
-- drahtlos über ESP-NOW überträgt
-- Visualisierungen ermöglicht
-- Echtzeitüberwachung bietet
+- Sensorbasierter Messung
+- Drahtloser Kommunikation
+- Webserver zur Visualisierung
+- Graphischer Darstellung der Daten
+- Alarmfunktion über Buzzer
+- Energiesparmodus (Deep Sleep)
+
+
 
 # 4. Theorie
 
 ## 4.1 ESP32
-Der ESP32 ist ein Mikrocontroller mit WLAN- und Bluetooth-Funktion und wird häufig in IoT-Systemen eingesetzt.
+
+Der ESP32 ist ein Mikrocontroller mit WLAN- und Bluetooth-Funktion.
+
+Er wird häufig in IoT-Projekten verwendet, da er viele GPIO-Pins und Energiesparmodi besitzt.
+
 
 
 ## 4.2 BMP280 Sensor
-Der BMP280 misst Temperatur und Luftdruck und kommuniziert über I2C.
+
+Der BMP280 misst Temperatur und Luftdruck.
+
+Die Kommunikation erfolgt über I2C.
+
 
 
 ## 4.3 ESP-NOW
-ESP-NOW ist ein drahtloses Peer-to-Peer Kommunikationsprotokoll ohne Router.
+
+ESP-NOW ist ein Protokoll zur direkten Kommunikation zwischen ESP-Geräten ohne Router.
+
+Vorteile:
+- Schnell
+- Energieeffizient
+- Kein WLAN-Router notwendig
 
 
-## 4.4 Webserver & Chart.js
-Der ESP32 stellt Daten als JSON bereit, welche im Browser mit Chart.js visualisiert werden.
+
+## 4.4 Webserver
+
+Der ESP32 stellt einen Webserver bereit, der die aktuellen Messwerte im Browser anzeigt.
 
 
-## 4.5 Deep Sleep
-Der Deep Sleep Modus reduziert den Energieverbrauch des Senders erheblich.
+
+## 4.5 Chart.js
+
+Chart.js wird zur Darstellung der Messwerte als Graph verwendet.
 
 
-# 5. Arbeitsschritte
 
-## 5.1 Projektplanung
-Zu Beginn wurde das gesamte System geplant. Es wurde entschieden, ein Sender-Empfänger-System mit ESP32 Mikrocontrollern zu entwickeln. Die Sensoren und Aktoren wurden in Mess-, Verarbeitungs- und Ausgabekomponenten eingeteilt.
+## 4.6 Deep Sleep
 
+Der ESP32 wird nach jeder Messung für 10 Sekunden in den Deep-Sleep-Modus versetzt.
 
-## 5.2 Sensorintegration (BMP280)
-Der BMP280 Sensor wurde am Sender angeschlossen und getestet. Dabei wurde überprüft, ob stabile Temperatur- und Luftdruckwerte korrekt ausgelesen werden.
-
-Nach erfolgreichem Test wurde der Sensor in das Hauptsystem integriert.
-
-
-## 5.3 ESP-NOW Kommunikation
-Die drahtlose Kommunikation zwischen Sender und Empfänger wurde implementiert.
+Ablauf:
+1. Aufwachen
+2. Messen
+3. Senden
+4. Schlafen (10s)
 
 
-## 5.4 Webserver Implementierung
-Der Empfänger stellt einen Webserver bereit, der die Daten in Echtzeit darstellt.
 
-Die Daten werden als JSON übertragen und im Browser verarbeitet.
+## 4.7 KY-006 Buzzer
 
+Der Buzzer wird aktiviert, sobald die Temperatur über 32°C steigt.
 
-## 5.5 Datenvisualisierung (Chart.js)
-Es wurden zwei Graphen implementiert:
-
-- Temperaturverlauf
-- Luftdruckverlauf
-
-Diese werden kontinuierlich aktualisiert und ermöglichen eine Live-Überwachung.
+Er gibt dann dauerhaft ein Signal aus.
 
 
-# 6. Testphase
 
-Alle Komponenten wurden einzeln getestet:
+# 5. Systemaufbau
 
-- BMP280 liefert stabile Werte
-- ESP-NOW funktioniert zuverlässig
-- Webserver aktualisiert Live-Daten
-- Graphen zeigen korrekte Historie
-- Deep Sleep reduziert Energieverbrauch
-- Buzzer löst Alarm aus
+## Sender
+- BMP280 Messung
+- ESP-NOW Senden
+- Deep Sleep
+
+## Empfänger
+- Daten empfangen
+- Webserver
+- Chart Darstellung
+- Buzzer Steuerung
+
+
+
+# 6. Arbeitsschritte
+
+- Planung des Systems
+- Aufbau der Schaltung
+- Integration BMP280
+- ESP-NOW Kommunikation
+- Webserver Erstellung
+- Graph Implementierung
+- Deep Sleep Integration
+
+
 
 # 7. Komponentenliste
 
 | Komponente | Funktion |
 |------------|----------|
-| ESP32 (x2) | Steuerung & Kommunikation |
-| BMP280 | Temperatur & Luftdruck |
-| KY-006 Buzzer | Alarm |
+| ESP32 (x2) | Steuerung |
+| BMP280 | Sensor |
+| KY-006 | Buzzer |
 | WLAN | Webserver |
 | ESP-NOW | Kommunikation |
 
 
+
 # 8. Schaltungsplan
 
-![Schaltplan](images/SchaltplanGK.png)
+![Schaltplan](images/schaltplan.png)
 
-Der Schaltplan zeigt den Aufbau des gesamten Systems.
+### BMP280 Anschluss
 
-Der Sender-ESP32 liest den BMP280 Sensor aus und sendet die Daten über ESP-NOW an den Empfänger.
+| Pin | ESP32 |
+|-----|------|
+| VCC | 3.3V |
+| GND | GND |
+| SDA | GPIO 21 |
+| SCL | GPIO 22 |
 
-Der Empfänger verarbeitet die Daten und steuert den Buzzer.
 
-Die Schaltung zeigt klar die Trennung zwischen Messung (Sender) und Verarbeitung (Empfänger), wodurch das System modular aufgebaut ist.
+
+### Buzzer Anschluss
+
+| Pin | ESP32 |
+|-----|------|
+| Signal | GPIO 27 |
+| GND | GND |
+
 
 
 # 9. Code
 
-Der vollständige Code ist im GitHub Repository enthalten.
+Der Code befindet sich im Repository.
 
-## Sender
-- BMP280 Messung
-- ESP-NOW Übertragung
-- Deep Sleep Energiesparmodus
-
-## Receiver
-- Webserver + Chart.js
-- Buzzer Alarm
-  
-# 10. Zusammenfassung
-
-Das Projekt zeigt ein vollständiges IoT-System mit drahtloser Kommunikation, Echtzeitvisualisierung und Sensorintegration.
-
-Die größte Herausforderung war die stabile ESP-NOW Verbindung, welche durch Kanal-Synchronisation gelöst wurde.
+Funktionen:
+- Sensor Messung
+- ESP-NOW Kommunikation
+- Webserver
+- Chart Darstellung
+- Buzzer Steuerung
+- Deep Sleep
 
 
-# 11. Quellen
+
+# 10. Testphase
+
+| Test | Ergebnis |
+|------|----------|
+| BMP280 | OK |
+| ESP-NOW | OK |
+| Webserver | OK |
+| Graph | OK |
+| Deep Sleep | OK |
+| Buzzer | OK |
+
+### Probleme
+
+Problem:
+- ESP-NOW und Webserver funktionierten gleichzeitig nicht stabil
+
+Lösung:
+- Fixierung auf denselben WLAN-Channel
+- Danach stabile Verbindung
+
+
+
+# 11. Zusammenfassung
+
+Es wurde ein IoT-System entwickelt, das Sensordaten misst, drahtlos überträgt und visualisiert.
+
+Der Einsatz von Deep Sleep reduziert den Energieverbrauch deutlich.
+
+Das System funktioniert stabil nach der Kanal-Synchronisation.
+
+
+
+# 12. Quellen
 
 [1] „Allnet 4duino_40in1_Kit1 Sensorkit 
-https://www.conrad.de/de/p/allnet-4duino-40in1-kit1-sensorkit-1-set-passend-fuer-entwicklungskits-arduino-2233140.html
+https://www.conrad.de/de/p/allnet-4duino-40in1-kit1-sensorkit-1-set-passend-fuer-entwicklungskits-arduino-2233140.html 
 
-[2] ESP-Now Verbindung
-https://randomnerdtutorials.com/esp-now-esp32-arduino-ide/
+[2] ESP-Now Verbindung 
+https://randomnerdtutorials.com/esp-now-esp32-arduino-ide/ 
 
-[3] „Chart.js“
-https://www.w3schools.com/js/js_graphics_chartjs.asp
+[3] „Chart.js“ 
+https://www.w3schools.com/js/js_graphics_chartjs.asp 
 
 [4] ESP32Async/ESPAsyncWebServer. 
-https://github.com/ESP32Async/ESPAsyncWebServer
+https://github.com/ESP32Async/ESPAsyncWebServer 
 
 [5] S. Santos, „ESP32 Deep Sleep with Arduino IDE and Wake Up Sources | Random Nerd Tutorials“. 
 https://randomnerdtutorials.com/esp32-deep-sleep-arduino-ide-wake-up-sources/
-
