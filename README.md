@@ -144,8 +144,7 @@ Der vollständige Code ist im GitHub Repository enthalten.
 ## Receiver
 - Webserver + Chart.js
 - Buzzer Alarm
-- 
-
+  
 # 10. Zusammenfassung
 
 Das Projekt zeigt ein vollständiges IoT-System mit drahtloser Kommunikation, Echtzeitvisualisierung und Sensorintegration.
