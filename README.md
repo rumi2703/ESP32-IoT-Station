@@ -168,7 +168,7 @@ Alle Komponenten wurden einzeln getestet:
 
 # 8. Schaltungsplan
 
-![Schaltplan](images/Schaltplan.png)
+![Schaltplan](images/SchaltplanGK.png)
 
 Der Schaltplan zeigt den Aufbau des gesamten Systems.
 
