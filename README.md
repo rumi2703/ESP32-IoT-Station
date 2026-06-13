@@ -361,3 +361,12 @@ https://github.com/ESP32Async/ESPAsyncWebServer
 
 [5] S. Santos, „ESP32 Deep Sleep with Arduino IDE and Wake Up Sources | Random Nerd Tutorials“. 
 https://randomnerdtutorials.com/esp32-deep-sleep-arduino-ide-wake-up-sources/
+
+[6] Blynk: a low-code IoT software platform for businesses and developers 
+[https://blynk.io]
+
+[7] ESP32 - OLED
+[https://esp32io.com/tutorials/esp32-oled]
+
+[8] S. Santos, „ESP32 with DHT11/DHT22 Temperature and Humidity Sensor using Arduino IDE | Random Nerd Tutorials
+[https://randomnerdtutorials.com/esp32-dht11-dht22-temperature-humidity-sensor-arduino-ide/]
