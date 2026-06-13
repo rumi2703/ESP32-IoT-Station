@@ -11,8 +11,8 @@
 
 // Internet-Verbindung
 #define ESPNOW_CHANNEL 5
-const char* ssid = "ZTE_5GCPE_CE5B";
-const char* password = "7L38R7655X";
+const char* ssid = "DEIN_WLAN_NAME";
+const char* password = "DEIN_WLAN_PASSWORT";
 
 #define OLED_BREITE 128
 #define OLED_HOEHE 64
@@ -20,8 +20,8 @@ const char* password = "7L38R7655X";
 
 Adafruit_SSD1306 display(OLED_BREITE, OLED_HOEHE, &Wire, -1);
 
-#define BOT_TOKEN "8835609227:AAGd1nO4WETj7A3Xw3400Vs11VEBL-ZlqZM"
-#define CHAT_ID "8805115568"
+#define BOT_TOKEN "DEIN_BOT_TOKEN"
+#define CHAT_ID "DEINE_CHAT_ID"
 
 WiFiClientSecure telegramClient;
 UniversalTelegramBot bot(BOT_TOKEN, telegramClient);
@@ -29,9 +29,9 @@ UniversalTelegramBot bot(BOT_TOKEN, telegramClient);
 unsigned long letzteTelegramAbfrage = 0;
 #define TELEGRAM_INTERVAL 1000
 
-#define BLYNK_TEMPLATE_ID "TMPL4KTQGnCl4"
-#define BLYNK_TEMPLATE_NAME "ESP23Projekt"
-#define BLYNK_AUTH_TOKEN "fJAoKAjlCvhE304lDpcGjlDeANnuZFFj"
+#define BLYNK_TEMPLATE_ID "DEIN_TEMPLATE_ID"
+#define BLYNK_TEMPLATE_NAME "DEIN_TEMPLATE_NAME"
+#define BLYNK_AUTH_TOKEN "DEIN_AUTH_TOKEN"
 #include <BlynkSimpleEsp32.h>
 
 WebServer server(80);
