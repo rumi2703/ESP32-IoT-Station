@@ -14,276 +14,338 @@ In diesem Projekt wurde eine IoT-Wetterstation mit zwei ESP32-Mikrocontrollern u
 
 # 2. Projektbeschreibung
 
-Das System besteht aus einem Sender und einem Empfänger.
+Es wurde ein System aus zwei ESP32 aufgebaut. Der erste ESP32 misst Temperatur, Luftdruck, Luftfeuchtigkeit, Helligkeit und Bewegung und sendet diese Daten über ESP-NOW an den zweiten ESP32. Der zweite ESP32 stellt die Messwerte über eine Webseite mit Graphen, eine JSON-API, ein OLED-Display, eine RGB-Status-LED, einem Buzzer, Blynk und Telegram dar.
 
-Der Sender misst Temperatur und Luftdruck und überträgt diese Daten über ESP-NOW.
+Die Grundanforderungen ESP-NOW, Webserver, BMP280-Sensor, KY-006 passiver Buzzer, einfacher Graph und Sleep Mode wurden umgesetzt. Zusätzlich wurden ein PIR-Sensor, ein Helligkeitssensor, ein DHT11-Sensor, eine RGB-Status-LED, eine API, ein OLED-Display, ein Telegram-Bot und Blynk integriert.
 
-Anschließend geht der Sender für 10 Sekunden in den Deep-Sleep-Modus.
 
-Der Empfänger verarbeitet die Daten, stellt sie im Webserver dar und steuert den Buzzer.
+## 3. Theorie
 
+### ESP32
 
+Der ESP32 ist ein Mikrocontroller mit integriertem WLAN und Bluetooth. Er eignet sich besonders gut für IoT-Projekte, da Sensoren und Aktoren direkt angeschlossen werden können und gleichzeitig Netzwerkfunktionen möglich sind.
 
-# 3. Projektziel
+### ESP-NOW
 
-Ziel war die Entwicklung eines funktionierenden IoT-Systems mit:
+ESP-NOW ist ein Kommunikationsprotokoll von Espressif. Damit können ESP32-Mikrocontroller Daten direkt miteinander austauschen, ohne dass beide Geräte mit demselben WLAN verbunden sein müssen. In diesem Projekt wird ESP-NOW verwendet, um die Messdaten vom Sender-ESP32 an den Empfänger-ESP32 zu übertragen.
 
-- Sensorbasierter Messung
-- Drahtloser Kommunikation
-- Webserver zur Visualisierung
-- Graphischer Darstellung der Daten
-- Alarmfunktion über Buzzer
-- Energiesparmodus (Deep Sleep)
+### Webserver
 
+Auf dem Empfänger-ESP32 wurde ein Webserver eingerichtet. Über die IP-Adresse des Empfängers kann eine Webseite geöffnet werden, auf der die aktuellen Messwerte angezeigt werden. Zusätzlich werden historische Messwerte in einfachen Graphen dargestellt.
 
+### BMP280
 
-# 4. Theorie
+Der BMP280 ist ein Sensor zur Messung von Temperatur und Luftdruck. Er wird über I2C mit dem ESP32 verbunden. In diesem Projekt liefert er die Temperatur und den Luftdruck.
 
-## 4.1 ESP32
+### DHT11
 
-Der ESP32 ist ein Mikrocontroller mit WLAN- und Bluetooth-Funktion.
+Der DHT11 misst Temperatur und Luftfeuchtigkeit. In diesem Projekt wird vor allem die Luftfeuchtigkeit verwendet, da die Temperatur bereits zusätzlich vom BMP280 gemessen wird.
 
-Er wird häufig in IoT-Projekten verwendet, da er viele GPIO-Pins und Energiesparmodi besitzt.
+### PIR-Sensor
 
+Ein PIR-Sensor erkennt Bewegung durch Infrarotstrahlung. Im Projekt wird damit festgestellt, ob im Bereich des Sensors Bewegung erkannt wurde.
 
+### Helligkeitssensor
 
-## 4.2 BMP280 Sensor
+Der Helligkeitssensor erkennt, ob die Umgebung hell oder dunkel ist. Der Zustand wird als Textwert auf der Webseite und in Blynk dargestellt.
 
-Der BMP280 misst Temperatur und Luftdruck.
+### KY-006 passiver Buzzer
 
-Die Kommunikation erfolgt über I2C.
+Der KY-006 ist ein passiver Buzzer. Er kann mit einer Frequenz angesteuert werden und gibt dadurch einen Ton aus. Im Projekt wird der Buzzer aktiviert, wenn die Temperatur über 32 °C liegt.
 
+### RGB-Status-LED
 
+Eine RGB-LED wird verwendet, um den aktuellen Zustand der Station darzustellen. Es wurde eine Common-Cathode-RGB-LED verwendet. Der gemeinsame Pin ist mit GND verbunden. Die einzelnen Farbpins werden über 220-Ohm-Widerstände mit den GPIO-Pins verbunden.
 
-## 4.3 ESP-NOW
+| Farbe | Bedeutung |
+|---|---|
+| Grün | WLAN verbunden / Station wurde gestartet |
+| Blau | Normalbetrieb / Messdaten wurden empfangen |
+| Rot | Warnung, Temperatur über 32 °C |
+| Aus | Status-LED wurde über das Webinterface deaktiviert |
 
-ESP-NOW ist ein Protokoll zur direkten Kommunikation zwischen ESP-Geräten ohne Router.
+Die Status-LED kann zusätzlich über das Webinterface ein- und ausgeschaltet werden.
 
-Vorteile:
-- Schnell
-- Energieeffizient
-- Kein WLAN-Router notwendig
+### Sleep Mode
 
+Der Sender-ESP32 geht nach jeder Messung für 10 Sekunden in den Deep Sleep. Dadurch wird Energie gespart. Nach dem Aufwachen werden die Messwerte erneut erfasst und wieder an den Empfänger gesendet.
 
+### OLED-Display
 
-## 4.4 Webserver
+Das OLED-Display zeigt die aktuellen Messwerte direkt am Empfänger an. Dadurch können die Werte auch ohne Smartphone oder Webseite abgelesen werden.
 
-Der ESP32 stellt einen Webserver bereit, der die aktuellen Messwerte im Browser anzeigt.
+### Telegram-Bot
 
+Über einen Telegram-Bot können die aktuellen Werte abgefragt werden. Wenn der Befehl `/status` gesendet wird, antwortet der Bot mit Temperatur, Druck, Luftfeuchtigkeit, Helligkeit und Bewegung.
 
+### Blynk
 
-## 4.5 Chart.js
+Blynk wird verwendet, um die Messwerte am Smartphone anzuzeigen. Die Werte werden über virtuelle Pins an die Blynk-App gesendet.
 
-Chart.js wird zur Darstellung der Messwerte als Graph verwendet.
 
+## 4. Arbeitsschritte
 
+### 4.1 Aufbau des Sender-ESP32
 
-## 4.6 Deep Sleep
+Am Sender-ESP32 wurden die Sensoren angeschlossen. Der BMP280 wurde über I2C verbunden. Der DHT11, der Helligkeitssensor und der PIR-Sensor wurden an digitale GPIO-Pins angeschlossen.
 
-Der ESP32 wird nach jeder Messung für 10 Sekunden in den Deep-Sleep-Modus versetzt.
+| Bauteil | ESP32 Pin |
+|---|---|
+| BMP280 SDA | GPIO 21 |
+| BMP280 SCL | GPIO 22 |
+| DHT11 | GPIO 23 |
+| Helligkeitssensor | GPIO 19 |
+| PIR-Sensor | GPIO 18 |
 
-Ablauf:
-1. Aufwachen
-2. Messen
-3. Senden
-4. Schlafen (10s)
+Der Sender misst die Werte und speichert sie in einer Datenstruktur. Danach werden sie über ESP-NOW an die MAC-Adresse des Empfängers gesendet.
 
+### 4.2 Aufbau des Empfänger-ESP32
 
+Am Empfänger-ESP32 wurden Buzzer, RGB-LED und OLED-Display angeschlossen. Zusätzlich verbindet sich der Empfänger mit dem WLAN, damit Webserver, Telegram und Blynk funktionieren.
 
-## 4.7 KY-006 Buzzer
+| Bauteil | ESP32 Pin |
+|---|---|
+| KY-006 Buzzer | GPIO 27 |
+| RGB Rot | GPIO 25 |
+| RGB Grün | GPIO 26 |
+| RGB Blau | GPIO 33 |
+| OLED SDA | GPIO 21 |
+| OLED SCL | GPIO 22 |
 
-Der Buzzer wird aktiviert, sobald die Temperatur über 32°C steigt.
+### 4.3 Datenübertragung mit ESP-NOW
 
-Er gibt dann dauerhaft ein Signal aus.
+Für die Übertragung wurde beim Sender und Empfänger dieselbe Datenstruktur verwendet. Dadurch können alle Messwerte gemeinsam übertragen werden.
 
+```cpp
+typedef struct struct_message {
+  float temperatur;
+  float druck;
+  float luftfeuchtigkeit;
+  bool hell;
+  bool bewegung;
+} struct_message;
+```
 
+Der Sender speichert die gemessenen Werte in dieser Struktur und sendet sie anschließend mit ESP-NOW an den Empfänger. Am Empfänger werden die Daten wieder ausgelesen und in Variablen gespeichert.
 
-# 5. Systemaufbau
+### 4.4 Messung der Sensordaten
 
-## Sender
-- BMP280 Messung
-- ESP-NOW Senden
-- Deep Sleep
+Am Sender werden die Messwerte des BMP280, DHT11, Helligkeitssensors und PIR-Sensors eingelesen.
 
-## Empfänger
-- Daten empfangen
-- Webserver
-- Chart Darstellung
-- Buzzer Steuerung
+```cpp
+myData.temperatur = bmp.readTemperature();
+myData.druck = bmp.readPressure() / 100.0F;
+myData.luftfeuchtigkeit = dht.readHumidity();
+myData.hell = !digitalRead(LIGHT_PIN);
+myData.bewegung = digitalRead(PIR_PIN);
+```
 
+Die Temperatur und der Luftdruck stammen vom BMP280. Die Luftfeuchtigkeit wird mit dem DHT11 gemessen. Der Helligkeitssensor und der PIR-Sensor liefern digitale Zustände.
 
+### 4.5 Sleep Mode
 
-### 6. Arbeitsschritt
+Nach dem Senden der Messwerte geht der Sender-ESP32 für 10 Sekunden in den Deep Sleep.
 
-Im folgenden Abschnitt werden die einzelnen Umsetzungsschritte des Projekts detailliert beschrieben, sodass das System nachvollziehbar und reproduzierbar ist.
+```cpp
+esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+esp_deep_sleep_start();
+```
 
+Dadurch wird Energie gespart. Nach Ablauf der Zeit startet der ESP32 automatisch neu, misst erneut und sendet wieder Daten an den Empfänger.
 
+### 4.6 Webserver
 
-### 6.1 Planung und Systemdesign
+Der Empfänger-ESP32 verbindet sich mit dem WLAN und startet einen Webserver. Über die IP-Adresse des Empfängers kann eine Webseite geöffnet werden, auf der die aktuellen Messwerte angezeigt werden.
 
-Zu Beginn wurde das Gesamtsystem geplant. 
-Der Sender übernimmt ausschließlich die Sensordaten-Erfassung, während der Empfänger für Verarbeitung, Speicherung und Darstellung zuständig ist.
+Die Webseite zeigt folgende Werte an:
 
+- Temperatur
+- Luftdruck
+- Luftfeuchtigkeit
+- Helligkeit
+- Bewegung
 
+Zusätzlich werden Temperatur, Luftdruck und Luftfeuchtigkeit als einfache Graphen dargestellt. Dafür werden die letzten Messwerte in Arrays gespeichert.
 
-### 6.2 Aufbau der Hardware
+```cpp
+float temperaturHistorie[MAX_DATENPUNKTE];
+float druckHistorie[MAX_DATENPUNKTE];
+float luftfeuchtigkeitHistorie[MAX_DATENPUNKTE];
+String zeitHistorie[MAX_DATENPUNKTE];
+```
 
-Die Komponenten wurden zunächst auf Breadboards aufgebaut und miteinander verbunden.
+Es werden maximal 40 Datenpunkte gespeichert. Wenn diese Anzahl überschritten wird, werden die ältesten Werte überschrieben.
 
-Dabei wurde besonders darauf geachtet, dass:
-- der BMP280 korrekt angeschlossen ist (SDA und SCL Pins)
-- der KY-006 Buzzer am digitalen GPIO-Pin angeschlossen ist
-- stabile Stromversorgung (3.3V) verwendet wird
+### 4.7 Status-LED
 
-Nach dem Aufbau wurde jede Verbindung einzeln getestet.
+Die RGB-LED zeigt den aktuellen Zustand der Station an.
 
+| Farbe | Bedeutung |
+|---|---|
+| Grün | WLAN verbunden / Station gestartet |
+| Blau | Normalbetrieb / Messdaten empfangen |
+| Rot | Warnung, Temperatur über 32 °C |
+| Aus | Status-LED über Webinterface deaktiviert |
 
-### 6.3 Integration des BMP280 Sensors
+Die LED wurde als Common-Cathode-RGB-LED angeschlossen. Der gemeinsame Pin ist mit GND verbunden. Die Farbpins sind über 220-Ohm-Widerstände mit den GPIO-Pins verbunden.
 
-Der BMP280 Sensor wurde über den I2C-Bus mit dem ESP32 verbunden.
+```cpp
+#define RGB_ROT_PIN 25
+#define RGB_GRUEN_PIN 26
+#define RGB_BLAU_PIN 33
+```
 
-Anschließend wurde getestet, ob Temperatur- und Luftdruckwerte korrekt ausgelesen werden.
+Die Status-LED kann über eine Variable aktiviert oder deaktiviert werden.
 
-Nach erfolgreichem Test wurden die Messwerte in das Hauptprogramm integriert.
+```cpp
+bool statusLedAktiv = true;
+```
 
+Wenn die Temperatur über 32 °C steigt, wird Rot angezeigt. Im Normalbetrieb wird Blau angezeigt. Beim Start nach erfolgreicher WLAN-Verbindung leuchtet die LED kurz Grün.
 
+### 4.8 Status-LED im Webinterface ein- und ausschalten
 
-### 6.4 Implementierung von ESP-NOW
+Damit die Status-LED über die Webseite gesteuert werden kann, wurde ein Button im Webinterface eingefügt. Beim Drücken des Buttons wird zwischen aktiv und inaktiv gewechselt.
 
-Für die drahtlose Kommunikation wurde ESP-NOW verwendet.
+```cpp
+void handleLedToggle() {
+  statusLedAktiv = !statusLedAktiv;
+  aktualisiereStatusLed();
 
-Zunächst wurde die MAC-Adresse des Empfänger-ESP32 ausgelesen und im Sender hinterlegt.
+  server.sendHeader("Location", "/");
+  server.send(303);
+}
+```
 
-Danach wurde:
-- ein Peer hinzugefügt
-- eine Datenstruktur für Temperatur und Luftdruck erstellt
-- ein Testdatensatz gesendet
+Die Route wird im `setup()` registriert.
 
-Die Übertragung wurde anschließend erfolgreich verifiziert.
+```cpp
+server.on("/led-toggle", handleLedToggle);
+```
 
+Auf der Webseite wird angezeigt, ob die Status-LED ein- oder ausgeschaltet ist. Zusätzlich wird ein Button zum Umschalten angezeigt.
 
+### 4.9 JSON-API
 
-### 6.5 Webserver Implementierung
+Zusätzlich zur Webseite wurde eine einfache API umgesetzt. Dadurch können Messwerte auch als JSON-Daten abgerufen werden.
 
-Der Empfänger stellt einen Webserver zur Verfügung.
+```cpp
+void handleApiData() {
+  JsonDocument doc;
 
-Nach Verbindung mit dem WLAN kann der Benutzer über einen Browser auf die aktuelle IP-Adresse zugreifen.
+  doc["Temperatur"] = myData.temperatur;
+  doc["Druck"] = myData.druck;
 
-Die Messwerte werden im JSON-Format bereitgestellt und im Browser verarbeitet.
+  String response;
+  serializeJson(doc, response);
+  server.send(200, "application/json", response);
+}
+```
 
+Die API ist über den Pfad `/data` erreichbar. Sie kann verwendet werden, um die Daten maschinell weiterzuverarbeiten.
 
+### 4.10 Buzzer
 
-### 6.6 Datenvisualisierung (Chart.js)
+Der passive KY-006-Buzzer wird als akustische Warnung verwendet. Wenn die Temperatur über 32 °C steigt, wird ein Ton ausgegeben.
 
-Für die Darstellung der Messwerte wurde Chart.js verwendet.
+```cpp
+if (aktuelleTemperatur > TEMP_GRENZE) {
+  tone(BUZZER_PIN, 2000);
+} else {
+  noTone(BUZZER_PIN);
+}
+```
 
-Die empfangenen Daten werden laufend aktualisiert und in zwei Diagrammen dargestellt:
-- Temperaturverlauf
-- Luftdruckverlauf
+Dadurch wird eine zu hohe Temperatur nicht nur optisch über die RGB-LED, sondern auch akustisch angezeigt.
 
-Die Daten werden kontinuierlich ergänzt, wodurch ein Verlauf sichtbar wird.
+### 4.11 OLED-Display
 
+Am Empfänger wurde ein OLED-Display angeschlossen. Das Display zeigt die aktuellen Messwerte direkt am Gerät an.
 
+Angezeigt werden:
 
-### 6.7 Deep Sleep Umsetzung
+- Temperatur
+- Luftdruck
+- Luftfeuchtigkeit
+- Helligkeit
+- Bewegung
 
-Nach jeder erfolgreichen Messung wird der Sender in den Deep-Sleep-Modus versetzt.
+Das Display wird nach jedem neuen Datenempfang aktualisiert. Dadurch sind die Werte auch ohne Webseite oder Smartphone sichtbar.
 
-Ablauf:
-1. ESP32 startet
-2. Messung von Temperatur und Luftdruck
-3. Übertragung der Daten via ESP-NOW
-4. Aktivierung von Deep Sleep für 10 Sekunden
-5. Neustart des Zyklus
+### 4.12 Telegram-Bot
 
-Durch diesen Mechanismus wird der Energieverbrauch deutlich reduziert.
+Ein Telegram-Bot wurde integriert, damit die Messwerte per Nachricht abgefragt werden können. Wenn im Telegram-Chat der Befehl `/status` gesendet wird, antwortet der Bot mit den aktuellen Messwerten.
 
+Beispiel:
 
+```text
+Aktuelle Messwerte:
 
+Temperatur: 24.8 C
+Druck: 1012.5 hPa
+Luftfeuchtigkeit: 45.0 %
+Helligkeit: Hell
+Bewegung: NEIN
+```
 
-# 7. Komponentenliste
+Ohne den Befehl `/status` werden keine Messwerte gesendet.
 
-| Komponente | Funktion |
-|------------|----------|
-| ESP32 (x2) | Steuerung |
-| BMP280 | Sensor |
-| KY-006 | Buzzer |
-| WLAN | Webserver |
-| ESP-NOW | Kommunikation |
+### 4.13 Blynk
 
+Blynk wurde verwendet, um die Messwerte am Smartphone anzuzeigen. Dafür wurden virtuelle Pins angelegt.
 
+| Blynk Pin | Wert |
+|---|---|
+| V0 | Temperatur |
+| V1 | Druck |
+| V2 | Luftfeuchtigkeit |
+| V3 | Helligkeit |
+| V4 | Bewegung |
 
-# 8. Schaltungsplan
+Die Werte werden regelmäßig an Blynk gesendet und in der App mit passenden Widgets angezeigt.
+
+
+
+# 4.14 Schaltungsplan
 
 ![Schaltplan](images/SchaltplanGK.png)
 
-### BMP280 Anschluss
-
-| Pin | ESP32 |
-|-----|------|
-| VCC | 3.3V |
-| GND | GND |
-| SDA | GPIO 21 |
-| SCL | GPIO 22 |
+Der Schaltplan zeigt die Verbindung der Sensoren und Aktoren mit den GPIO-Pins der beiden ESp32.
 
 
 
-### Buzzer Anschluss
+# 4.15 Code
 
-| Pin | ESP32 |
-|-----|------|
-| Signal | GPIO 27 |
-| GND | GND |
+Der Code (Sender + Empfänger) befinden sich im Repository.
 
 
+### 4.16 Komponentenliste
 
-# 9. Code
-
-Der Code befindet sich im Repository.
-
-Funktionen:
-- Sensor Messung
-- ESP-NOW Kommunikation
-- Webserver
-- Chart Darstellung
-- Buzzer Steuerung
-- Deep Sleep
-
-
-
-# 10. Testphase
-
-| Test | Ergebnis |
-|------|----------|
-| BMP280 | OK |
-| ESP-NOW | OK |
-| Webserver | OK |
-| Graph | OK |
-| Deep Sleep | OK |
-| Buzzer | OK |
-
-### Probleme
-
-Problem:
-- ESP-NOW und Webserver funktionierten gleichzeitig nicht stabil
-
-Lösung:
-- Fixierung auf denselben WLAN-Channel
-- Danach stabile Verbindung
+| Komponente | Anzahl | Verwendung |
+|---|---:|---|
+| ESP32 | 2 | Sender und Empfänger |
+| BMP280 | 1 | Temperatur und Luftdruck |
+| DHT11 | 1 | Luftfeuchtigkeit |
+| PIR-Sensor | 1 | Bewegungserkennung |
+| Helligkeitssensor | 1 | Erkennung von hell/dunkel |
+| KY-006 passiver Buzzer | 1 | Akustische Warnung |
+| RGB-LED Common Cathode | 1 | Statusanzeige |
+| OLED-Display | 1 | Anzeige am Gerät |
+| 220 Ohm Widerstände | 3 | Schutz der RGB-LED |
+| Breadboard | 1 | Aufbau der Schaltung |
+| Jumper-Kabel | mehrere | Verbindung der Bauteile |
 
 
+## 5. Zusammenfassung
 
-# 11. Zusammenfassung
+Das Projekt wurde erfolgreich umgesetzt. Zwei ESP32 kommunizieren über ESP-NOW miteinander. Der Sender erfasst Temperatur, Luftdruck, Luftfeuchtigkeit, Helligkeit und Bewegung und überträgt diese Daten an den Empfänger. Der Empfänger stellt die Daten über Webserver, Graphen, JSON-API, OLED-Display, Telegram und Blynk dar.
 
-Es wurde ein IoT-System entwickelt, das Sensordaten misst, drahtlos überträgt und visualisiert.
+Während der Umsetzung traten kleinere Schwierigkeiten bei der RGB-LED auf. Die LED leuchtete zunächst nicht, da die Beinchen-Zuordnung geprüft werden musste. Nach dem Testen der einzelnen LED-Beinchen konnte die RGB-LED korrekt angeschlossen und als Status-LED verwendet werden.
 
-Der Einsatz von Deep Sleep reduziert den Energieverbrauch deutlich.
-
-Das System funktioniert stabil nach der Kanal-Synchronisation.
-
+Zusätzlich wurde festgestellt, dass Blynk für die Smartphone-Anzeige einfacher umzusetzen ist als RemoteXY. Die Messwerte konnten über virtuelle Pins in der Blynk-App dargestellt werden.
 
 
-# 12. Quellen
+# 6. Quellen
 
 [1] „Allnet 4duino_40in1_Kit1 Sensorkit 
 https://www.conrad.de/de/p/allnet-4duino-40in1-kit1-sensorkit-1-set-passend-fuer-entwicklungskits-arduino-2233140.html 
