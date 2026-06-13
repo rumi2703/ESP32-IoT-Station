@@ -1,22 +1,14 @@
 # IoT-System mit ESP32 – ESP-NOW
 
-## Temperatur- und Luftdruckmessung mit drahtloser Datenübertragung
+## Messdatenübertragung zwischen zwei ESP32
 
 **VerfasserInnen:** Marco Duong, Rumeysa Erkan  
-**Datum:** 13.05.2026
+**Datum:** 13.06.2026
 
 
 # 1. Einführung
 
-Im Rahmen dieses Projekts wurde ein IoT-System auf Basis von zwei ESP32-Mikrocontrollern entwickelt.
-
-Ziel des Systems ist die Erfassung, drahtlose Übertragung und Visualisierung von Sensordaten.
-
-Dabei werden Temperatur- und Luftdruckwerte mithilfe eines BMP280 Sensors gemessen und über ESP-NOW an einen zweiten ESP32 übertragen.
-
-Die empfangenen Daten werden auf einem Webserver dargestellt und zusätzlich durch einen Buzzer überwacht.
-
-Durch den Einsatz des Deep-Sleep-Modus wird der Energieverbrauch des Systems reduziert.
+In diesem Projekt wurde eine IoT-Wetterstation mit zwei ESP32-Mikrocontrollern umgesetzt. Die Messdaten werden auf einem Sender-ESP32 erfasst und über ESP-NOW an einen Empfänger-ESP32 übertragen. Am Empfänger werden die Daten über einen Webserver, ein OLED-Display, Blynk und einen Telegram-Bot angezeigt.
 
 
 
