@@ -308,7 +308,7 @@ Die Werte werden regelmäßig an Blynk gesendet und in der App mit passenden Wid
 
 # 4.14 Schaltungsplan
 
-![Schaltplan](images/SchaltplanGK.png)
+![Schaltplan](images/Schaltplan.png)
 
 Der Schaltplan zeigt die Verbindung der Sensoren und Aktoren mit den GPIO-Pins der beiden ESp32.
 
